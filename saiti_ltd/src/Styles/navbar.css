@@ -1,0 +1,25 @@
+
+.nav_bar {
+    height: clamp(60px, 10vh, 80px); /* Height scales with screen size */
+    background: transparent;
+    z-index: 1050;
+    font-family: 'Funnel Display', sans-serif;
+}
+
+.logo-text {
+    /* min 1.5rem, grows with viewport, max 2.5rem */
+    font-size: clamp(1.5rem, 4vw, 2.5rem); 
+    margin: 0;
+    font-family: 'Funnel Display', sans-serif;
+}
+
+.nav-btn {
+    /* Scalable font and padding for the button */
+    font-size: clamp(0.8rem, 2vw, 1.1rem);
+    padding: clamp(6px, 1.5vw, 12px) clamp(20px, 4vw, 40px);
+    transition: transform 0.2s ease;
+}
+
+.nav-btn:hover {
+    transform: scale(1.05); /* Simple scale interaction */
+}

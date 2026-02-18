@@ -1,0 +1,44 @@
+body{
+    overflow: hidden;
+    height: 100vh;
+
+}
+h1{
+    font-size: clamp(1.4rem, 5vw, 2.7rem) !important;
+    line-height: 1.2 !important;
+    margin-bottom: 1rem !important;
+}
+h3{
+  font-size: clamp(0.9rem, 2vw, 1.5rem) !important;
+  line-height: 1.5 !important;
+  max-width: 800px !important;
+}
+.main_cont{
+    font-family: "Open Sans", sans-serif;
+    overflow: hidden !important;
+}
+
+.hero_text{
+        margin-bottom: 20rem !important;
+    }
+
+@media only screen and (max-width: 600px) {
+    .hero_text{
+        margin-bottom: 150px !important;
+        height: 20px !important;
+    }
+}
+
+@media only screen and (min-width: 992px) {
+    .hero_text{
+        margin-bottom:200px !important;
+    }
+}
+.btn_signup{
+    background-color: #F3D948 !important;
+    border: 2px solid white !important;
+}
+.btn_signup:hover {
+    background-color: #EDC500 !important;
+}
+
