@@ -3,6 +3,7 @@ import Login from './Login_page/Login';
 import Signup from './Signup_Page/Signup';
 import User_Dt_Main from './Signup_Page/User_details_Collection/User_Dt_Main';
 import Profile_Main from './User_Profile/Profile_main'
+import Products_main from './Products_Page/Products_main';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
             <Route path='/signup' element={<Signup/>}/>
             <Route path='/signup/userdetails' element={<User_Dt_Main/>}/>
             <Route path='/profile' element={<Profile_Main/>}/>
+            <Route path='/products' element={<Products_main/>}/>
         </Routes>
     </BrowserRouter>
   );

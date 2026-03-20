@@ -1,7 +1,6 @@
 body{
-    overflow: hidden;
+    /* overflow: hidden; */
     height: 100vh;
-
 }
 h1{
     font-size: clamp(1.4rem, 5vw, 2.7rem) !important;
@@ -15,7 +14,7 @@ h3{
 }
 .main_cont{
     font-family: "Open Sans", sans-serif;
-    overflow: hidden !important;
+    /* overflow: hidden !important; */
 }
 
 .hero_text{
