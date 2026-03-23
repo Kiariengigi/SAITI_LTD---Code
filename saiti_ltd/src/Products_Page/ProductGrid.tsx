@@ -19,6 +19,30 @@ const products = [
 
 const ProductGrid: React.FC = () => {
   return (
+    <>
+    <div className="input-group" style={{ maxWidth: 320 }}>
+          <span className="input-group-text bg-white border-end-0" style={{ borderRadius: "24px 0 0 24px" }}>
+            <svg
+              width="14" height="14" viewBox="0 0 24 24"
+              fill="none" stroke="#aaa" strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            className="form-control border-start-0 small"
+            placeholder="Search"
+            style={{
+              borderRadius: "0 24px 24px 0",
+              fontSize: 13,
+              background: "#fafafa",
+              boxShadow: "none",
+            }}
+          />
+        </div>
     <div className="d-flex gap-3 px-3 py-3" style={{ alignItems: "flex-start" }}>
       <Filter />
       <div style={{ flex: 1 }}>
@@ -43,6 +67,7 @@ const ProductGrid: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
