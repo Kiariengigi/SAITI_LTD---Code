@@ -20,10 +20,10 @@ class App {
         this.app.use(cookieParser());
         this.app.use(cors({
             origin: [
-                'http://localhost:5173', // your frontend url
-                'https://mywebsite.com' // your production url optional
+                'https://saiti-ltd.vercel.app', 
+                'http://localhost:5173'
             ],
-            methods: ["GET", "POST", "DELETE"],
+            methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
             credentials: true
         }))
     }
