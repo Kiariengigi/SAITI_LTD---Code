@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+declare const google: any;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +35,7 @@ interface LocationPickerProps {
 // ─── Loader helper ────────────────────────────────────────────────────────────
 
 let scriptPromise: Promise<void> | null = null;
-type MapsWindow = Window & { google?: typeof google };
+type MapsWindow = Window & { google?: any };
 
 function loadGoogleMaps(apiKey: string): Promise<void> {
   if (scriptPromise) return scriptPromise;
@@ -66,10 +67,10 @@ const LocationandReach: React.FC<LocationPickerProps> = ({
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const geocoderRef = useRef<any>(null);
+  const autocompleteRef = useRef<any>(null);
 
   const [address, setAddress] = useState<string>("");
   const [coords, setCoords] = useState<LatLng | null>(null);
@@ -136,7 +137,7 @@ const LocationandReach: React.FC<LocationPickerProps> = ({
       if (!geocoder) return;
       geocoder.geocode(
         { location: latLng },
-        (results: google.maps.GeocoderResult[] | null, gStatus: google.maps.GeocoderStatus) => {
+        (results: any[] | null, gStatus: string) => {
         if (gStatus === "OK" && results?.[0]) {
           const formatted = results[0].formatted_address;
           setAddress(formatted);
@@ -187,7 +188,7 @@ const LocationandReach: React.FC<LocationPickerProps> = ({
         geocoderRef.current = new google.maps.Geocoder();
 
         // Click on map → place marker
-        map.addListener("click", (e: google.maps.MapMouseEvent) => {
+        map.addListener("click", (e: any) => {
           if (e.latLng) {
             placeMarker({ lat: e.latLng.lat(), lng: e.latLng.lng() });
           }
@@ -264,7 +265,7 @@ const LocationandReach: React.FC<LocationPickerProps> = ({
     setStatusMsg("Searching…");
     geocoder.geocode(
       { address: address.trim() },
-      (results: google.maps.GeocoderResult[] | null, gStatus: google.maps.GeocoderStatus) => {
+      (results: any[] | null, gStatus: string) => {
         if (gStatus === "OK" && results?.[0]?.geometry?.location) {
           const loc = results[0].geometry.location;
           const latLng = { lat: loc.lat(), lng: loc.lng() };
