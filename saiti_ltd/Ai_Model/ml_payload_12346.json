@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-03-28T21:21:52.138371Z",
+  "customer_id": "12346",
+  "account_context": {
+    "total_distinct_skus_ordered": 25,
+    "total_customer_orders": 1,
+    "customer_total_spend": 169.36,
+    "avg_days_between_orders": NaN
+  },
+  "order_history_sample": [],
+  "ml_recommendations": [],
+  "capacity_summary": {
+    "skus_with_low_stock": 0,
+    "skus_with_high_supply_risk": 0
+  },
+  "business_rules": {
+    "minimum_order_value": 0,
+    "blocked_skus": []
+  }
+}

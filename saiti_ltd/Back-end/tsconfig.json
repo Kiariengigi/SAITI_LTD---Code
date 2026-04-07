@@ -16,6 +16,13 @@
         "@utils/*": ["utils/*"]
     },
     "types": ["node"]
-}, 
+},
+"ts-node": {
+    "esm": true,
+    "experimentalEsm": true,
+    "compilerOptions": {
+        "module": "esnext"
+    }
+},
 "include": ["src/"],
 }

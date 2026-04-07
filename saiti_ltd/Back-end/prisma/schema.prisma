@@ -4,8 +4,8 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
@@ -13,10 +13,419 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  email String @unique 
-  password String 
-  refreshToken String? 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  refreshToken String?  @map("refresh_token") 
+  roleType     RoleType @map("role_type")
+  fullName     String   @map("full_name")
+  phoneNumber  String?  @map("phone_number")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Role subtype relations (one-to-one)
+  producer   Producer?
+  wholesaler Wholesaler?
+  merchant   Merchant?
+
+  // Order relations (from ERD: user_id = buyer, seller_id = seller)
+  ordersAsBuyer  Order[] @relation("BuyerOrders")
+  ordersAsSeller Order[] @relation("SellerOrders")
+
+  // AI relations
+  userFeatures           UserFeature[]
+  recommendations        Recommendation[]
+  recommendationItems    RecommendationItem[]
+  insightsCache          InsightsCache[]
+
+  @@map("users")
+}
+
+enum RoleType {
+  producer
+  wholesaler
+  merchant
+  admin
+
+  @@map("role_type")
+}
+
+// ── A2. Producers subtype ────────────────────────────────────────
+model Producer {
+  id          String  @id @default(uuid()) @db.Uuid
+  userId      String  @unique @map("user_id") @db.Uuid
+  companyName String  @map("company_name")
+  industryType String? @map("industry_type")
+  location    String?
+  phoneNumber String? @map("phone_number")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products Product[]
+  producerStockStore ProducerStockStore[]
+
+  @@map("producers")
+}
+
+// ── A3. Wholesalers subtype ──────────────────────────────────────
+model Wholesaler {
+  id          String  @id @default(uuid()) @db.Uuid
+  userId      String  @unique @map("user_id") @db.Uuid
+  companyName String  @map("company_name")
+  industryType String? @map("industry_type")
+  location    String?
+  phoneNumber String? @map("phone_number")
+  creditLimit Decimal @default(0) @map("credit_limit") @db.Decimal(14, 2)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wholesalerProducts    WholesalerProduct[]
+  wholesalerStockStore  WholesalerStockStore[]
+
+  @@map("wholesalers")
+}
+
+// ── A4. Merchants subtype ────────────────────────────────────────
+model Merchant {
+  id           String  @id @default(uuid()) @db.Uuid
+  userId       String  @unique @map("user_id") @db.Uuid
+  businessName String  @map("business_name")
+  industryType String? @map("industry_type")
+  location     String?
+  phoneNumber  String? @map("phone_number")
+  creditLimit  Decimal @default(0) @map("credit_limit") @db.Decimal(14, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("merchants")
+}
+
+// ================================================================
+// B. PRODUCTS & STOCK
+// Matches ERD: Products table with producer_id FK,
+// current_stock_level, and Wholesalers_Selling
+// ================================================================
+
+model Product {
+  id                String  @id @default(uuid()) @db.Uuid
+  producerId        String  @map("producer_id") @db.Uuid
+  productName       String  @map("product_name")
+  description       String?
+  category          String?
+  unitOfMeasure     String  @default("unit") @map("unit_of_measure")
+  price             Decimal @db.Decimal(12, 2)
+  currentStockLevel Decimal @default(0) @map("current_stock_level") @db.Decimal(10, 3)
+  reorderPoint      Decimal @default(0) @map("reorder_point") @db.Decimal(10, 3)
+  isActive          Boolean @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  producer             Producer              @relation(fields: [producerId], references: [id])
+  wholesalerProducts   WholesalerProduct[]
+  orderItems           OrderItem[]
+  producerStockStore   ProducerStockStore[]
+  wholesalerStockStore WholesalerStockStore[]
+  userFeatures         UserFeature[]
+  insightsCache        InsightsCache[]
+  recommendationItems  RecommendationItem[]
+
+  @@map("products")
+}
+
+// ── B2. Wholesalers selling junction ─────────────────────────────
+// Implements ERD: Wholesalers_Selling attribute
+model WholesalerProduct {
+  wholesalerId String  @map("wholesaler_id") @db.Uuid
+  productId    String  @map("product_id") @db.Uuid
+  sellingPrice Decimal? @map("selling_price") @db.Decimal(12, 2)
+  stockLevel   Decimal @default(0) @map("stock_level") @db.Decimal(10, 3)
+  isActive     Boolean @default(true) @map("is_active")
+  listedAt     DateTime @default(now()) @map("listed_at")
+
+  wholesaler Wholesaler @relation(fields: [wholesalerId], references: [id])
+  product    Product    @relation(fields: [productId], references: [id])
+
+  @@id([wholesalerId, productId])
+  @@map("wholesaler_products")
+}
+
+// ── B3. Producer stock store ─────────────────────────────────────
+// DFD Figure 14: "Producers Stock Store"
+model ProducerStockStore {
+  id             String             @id @default(uuid()) @db.Uuid
+  producerId     String             @map("producer_id") @db.Uuid
+  productId      String             @map("product_id") @db.Uuid
+  quantityChange Decimal            @map("quantity_change") @db.Decimal(10, 3)
+  reason         ProducerStockReason @default(adjustment)
+  balanceAfter   Decimal            @map("balance_after") @db.Decimal(10, 3)
+  recordedAt     DateTime           @default(now()) @map("recorded_at")
+
+  producer Producer @relation(fields: [producerId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@map("producer_stock_store")
+}
+
+enum ProducerStockReason {
+  production
+  sale
+  adjustment
+  return
+  wastage
+  initial_stock
+
+  @@map("producer_stock_reason")
+}
+
+// ── B4. Wholesaler stock store ───────────────────────────────────
+// DFD Figure 14: "Wholesalers Stock Store"
+model WholesalerStockStore {
+  id             String                @id @default(uuid()) @db.Uuid
+  wholesalerId   String                @map("wholesaler_id") @db.Uuid
+  productId      String                @map("product_id") @db.Uuid
+  quantityChange Decimal               @map("quantity_change") @db.Decimal(10, 3)
+  reason         WholesalerStockReason @default(adjustment)
+  balanceAfter   Decimal               @map("balance_after") @db.Decimal(10, 3)
+  recordedAt     DateTime              @default(now()) @map("recorded_at")
+
+  wholesaler Wholesaler @relation(fields: [wholesalerId], references: [id])
+  product    Product    @relation(fields: [productId], references: [id])
+
+  @@map("wholesaler_stock_store")
+}
+
+enum WholesalerStockReason {
+  purchase
+  sale
+  adjustment
+  return
+  wastage
+  initial_stock
+
+  @@map("wholesaler_stock_reason")
+}
+
+model Order {
+  id               String        @id @default(uuid()) @db.Uuid
+  userId           String        @map("user_id") @db.Uuid       // buyer
+  sellerId         String        @map("seller_id") @db.Uuid     // seller
+  recommendationId String?       @map("recommendation_id") @db.Uuid
+  status           OrderStatus   @default(pending)
+  totalValue       Decimal?      @map("total_value") @db.Decimal(14, 2)
+  currency         String        @default("KES")
+  notes            String?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  buyer          User            @relation("BuyerOrders", fields: [userId], references: [id])
+  seller         User            @relation("SellerOrders", fields: [sellerId], references: [id])
+  recommendation Recommendation? @relation(fields: [recommendationId], references: [id])
+  orderItems     OrderItem[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  processing
+  dispatched
+  delivered
+  cancelled
+  returned
+
+  @@map("order_status")
+}
+
+// ── C2. Order items ──────────────────────────────────────────────
+// Primary AI model training source
+model OrderItem {
+  id                String  @id @default(uuid()) @db.Uuid
+  orderId           String  @map("order_id") @db.Uuid
+  productId         String  @map("product_id") @db.Uuid
+  quantityOrdered   Decimal @map("quantity_ordered") @db.Decimal(10, 3)
+  quantityDelivered Decimal? @map("quantity_delivered") @db.Decimal(10, 3)
+  unitPrice         Decimal @map("unit_price") @db.Decimal(12, 2)
+  wasRecommended    Boolean @default(false) @map("was_recommended")
+  isReorder         Boolean @default(false) @map("is_reorder")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// ================================================================
+// E. AI RECOMMENDATION SYSTEM
+// Implements DFD Figure 14:
+//   order_items → user_features (Feeds AI Model)
+//   → insights_cache (Insights Cache)
+//   → recommendations + recommendation_items (Generate Insights)
+//   → recommendation_feedback (feedback loop back to dashboards)
+// Models: Gradient Boosting Regressor + Random Forest Classifier
+// ================================================================
+
+// ── E1. User features (ML feature store) ─────────────────────────
+// Pre-computed nightly — what your Gradient Boosting model reads
+model UserFeature {
+  id                    String   @id @default(uuid()) @db.Uuid
+  userId                String   @map("user_id") @db.Uuid
+  productId             String   @map("product_id") @db.Uuid
+  // Past order signals
+  totalOrders           Int      @default(0) @map("total_orders")
+  avgOrderQty           Decimal? @map("avg_order_qty") @db.Decimal(10, 3)
+  stdOrderQty           Decimal? @map("std_order_qty") @db.Decimal(10, 3)
+  avgReorderCycleDays   Decimal? @map("avg_reorder_cycle_days") @db.Decimal(8, 1)
+  daysSinceLastOrder    Decimal? @map("days_since_last_order") @db.Decimal(8, 1)
+  daysOverdue           Decimal? @map("days_overdue") @db.Decimal(8, 1)
+  reorderRate           Decimal? @map("reorder_rate") @db.Decimal(5, 3)
+  qtyTrend              Decimal? @map("qty_trend") @db.Decimal(6, 3)
+  // Stock & supply signals
+  currentStockLevel     Decimal? @map("current_stock_level") @db.Decimal(10, 3)
+  daysToStockout        Decimal? @map("days_to_stockout") @db.Decimal(8, 1)
+  supplyRiskScore       Decimal? @map("supply_risk_score") @db.Decimal(4, 3)
+  // Demand forecast signals
+  demandForecast30d     Decimal? @map("demand_forecast_30d") @db.Decimal(10, 3)
+  orderVelocityPct      Decimal? @map("order_velocity_pct") @db.Decimal(7, 2)
+  reorderAdherencePct   Decimal? @map("reorder_adherence_pct") @db.Decimal(5, 1)
+  revenueAtRisk         Decimal? @map("revenue_at_risk") @db.Decimal(14, 2)
+  computedAt            DateTime @default(now()) @map("computed_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@map("user_features")
+}
+
+// ── E3. Insights cache ───────────────────────────────────────────
+// DFD Figure 14: "Insights Cache" data store
+// Pre-generated so dashboard loads instantly without re-running models
+model InsightsCache {
+  id            String      @id @default(uuid()) @db.Uuid
+  userId        String      @map("user_id") @db.Uuid
+  productId     String      @map("product_id") @db.Uuid
+  insightType   InsightType @map("insight_type")
+  forecastValue Decimal?    @map("forecast_value") @db.Decimal(10, 3)
+  confidence    Decimal?    @db.Decimal(5, 3)
+  severity      Severity    @default(medium)
+  insightText   String      @map("insight_text")
+  expiresAt     DateTime?   @map("expires_at")
+  generatedAt   DateTime    @default(now()) @map("generated_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId, insightType])
+  @@map("insights_cache")
+}
+
+enum InsightType {
+  demand_forecast
+  stockout_warning
+  reorder_recommendation
+  excess_inventory
+  delivery_bottleneck
+
+  @@map("insight_type")
+}
+
+enum Severity {
+  low
+  medium
+  high
+  critical
+
+  @@map("severity")
+}
+
+// ── E4. Recommendations ──────────────────────────────────────────
+// One row per recommendation run per user
+model Recommendation {
+  id                 String        @id @default(uuid()) @db.Uuid
+  userId             String        @map("user_id") @db.Uuid
+  modelId            String?       @map("model_id") @db.Uuid
+  llmProvider        String        @default("groq/llama-3.3-70b-versatile") @map("llm_provider")
+  accountSummary     String?       @map("account_summary")
+  nextBestAction     String?       @map("next_best_action")
+  mlCandidateCount   Int?          @map("ml_candidate_count")
+  rawLlmResponse     Json?         @map("raw_llm_response")
+  rawMlPayload       Json?         @map("raw_ml_payload")
+  isFallback         Boolean       @default(false) @map("is_fallback")
+  triggerType        TriggerType   @default(scheduled) @map("trigger_type")
+  generatedAt        DateTime      @default(now()) @map("generated_at")
+
+  user    User           @relation(fields: [userId], references: [id])
+  items   RecommendationItem[]
+  orders  Order[]
+
+  @@map("recommendations")
+}
+
+enum TriggerType {
+  scheduled
+  manual
+  dashboard
+  api
+
+  @@map("trigger_type")
+}
+
+// ── E5. Recommendation items ─────────────────────────────────────
+// Individual product recommendations — one row per product per run
+// Includes all 5 supporting metrics
+model RecommendationItem {
+  id                    String      @id @default(uuid()) @db.Uuid
+  recommendationId      String      @map("recommendation_id") @db.Uuid
+  userId                String      @map("user_id") @db.Uuid
+  productId             String      @map("product_id") @db.Uuid
+  productName           String?     @map("product_name")
+  action                RecAction
+  suggestedQty          Decimal?    @map("suggested_qty") @db.Decimal(10, 3)
+  confidence            Confidence?
+  urgencyFlag           Boolean     @default(false) @map("urgency_flag")
+  repRationale          String?     @map("rep_rationale")
+  // 5 supporting metrics
+  demandForecast30d     Decimal?    @map("demand_forecast_30d") @db.Decimal(10, 3)
+  orderVelocityPct      Decimal?    @map("order_velocity_pct") @db.Decimal(7, 2)
+  daysToStockout        Int?        @map("days_to_stockout")
+  reorderAdherencePct   Decimal?    @map("reorder_adherence_pct") @db.Decimal(5, 1)
+  revenueAtRisk         Decimal?    @map("revenue_at_risk") @db.Decimal(14, 2)
+  revenueAtRiskLevel    String?     @map("revenue_at_risk_level")
+  metricsJson           Json?       @map("metrics_json")
+  createdAt             DateTime    @default(now()) @map("created_at")
+
+  recommendation Recommendation         @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  user           User                   @relation(fields: [userId], references: [id])
+  product        Product                @relation(fields: [productId], references: [id])
+
+  @@map("recommendation_items")
+}
+
+enum RecAction {
+  reorder_now
+  reorder_soon
+  monitor
+
+  @@map("rec_action")
+}
+
+enum Confidence {
+  high
+  medium
+  low
+
+  @@map("confidence")
 }

@@ -1,0 +1,46 @@
+{
+  "recommendations": [
+    {
+      "sku": "ABC123",
+      "product_name": "Product A",
+      "action": "monitor",
+      "suggested_qty": 0,
+      "confidence": "low",
+      "urgency_flag": false,
+      "rep_rationale": "The customer has a demand forecast of 0 units in the next 30 days, with an order velocity change of NaN, indicating no recent orders. The days to stockout is undefined, and the reorder cycle adherence is NaN, as there is no order history. The revenue at risk is $0, as there are no orders at risk of stockout.",
+      "supporting_metrics": [
+        {
+          "label": "Demand forecast (next 30 days)",
+          "value": "0 units",
+          "interpretation": "The predicted number of units the customer will need in the next 30 days is 0."
+        },
+        {
+          "label": "Order velocity change",
+          "value": "NaN",
+          "interpretation": "There is no change in order velocity, as there are no recent orders to compare to."
+        },
+        {
+          "label": "Days to stockout",
+          "value": "undefined",
+          "interpretation": "The days to stockout is undefined, as there is no current demand or stock level to calculate from."
+        },
+        {
+          "label": "Reorder cycle adherence",
+          "value": "NaN",
+          "interpretation": "The reorder cycle adherence is undefined, as there is no order history to compare to."
+        },
+        {
+          "label": "Revenue at risk",
+          "value": "$0",
+          "interpretation": "There is no revenue at risk, as there are no orders that could potentially stockout."
+        }
+      ]
+    }
+  ],
+  "account_summary": "The customer has only placed one order, with a total spend of $169.36, and has ordered a total of 25 distinct SKUs. The customer's ordering history is limited, making it difficult to determine a clear ordering pattern.",
+  "next_best_action": "The rep should reach out to the customer to discuss their ordering needs and determine the best course of action to establish a consistent ordering pattern.",
+  "_provider": "llama-3.3-70b-versatile",
+  "customer_id": "12346",
+  "generated_at": "2026-03-28T21:21:52.138371Z",
+  "ml_candidate_count": 0
+}

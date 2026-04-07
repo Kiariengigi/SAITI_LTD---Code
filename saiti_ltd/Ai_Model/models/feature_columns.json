@@ -1,0 +1,23 @@
+[
+  "total_orders",
+  "avg_order_qty",
+  "std_order_qty",
+  "avg_reorder_cycle_days",
+  "std_reorder_cycle_days",
+  "reorder_cv",
+  "reorder_rate",
+  "purchase_frequency_rate",
+  "recency_score",
+  "qty_trend",
+  "is_habitual",
+  "total_revenue",
+  "avg_unit_price",
+  "customer_total_spend",
+  "atp_cover_days",
+  "supply_risk_score",
+  "low_stock_flag",
+  "sku_total_orders",
+  "sku_reorder_rate",
+  "sku_popularity_rank",
+  "source_id"
+]

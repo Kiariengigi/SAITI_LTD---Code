@@ -1,0 +1,34 @@
+XGBoost Reorder Model — Evaluation Report
+==========================================
+Training rows : 46,504
+Test rows     : 11,627
+Label balance : 25.4% positive
+ 
+ROC-AUC          : 0.8224
+Avg Precision    : 0.6550
+Precision @ 0.5  : 0.5430
+Recall @ 0.5     : 0.6825
+F1 @ 0.5         : 0.6048
+ 
+Classification Report:
+              precision    recall  f1-score   support
+
+  no reorder       0.88      0.80      0.84      8679
+     reorder       0.54      0.68      0.60      2948
+
+    accuracy                           0.77     11627
+   macro avg       0.71      0.74      0.72     11627
+weighted avg       0.80      0.77      0.78     11627
+
+ 
+Feature Importance (top 10):
+total_orders              0.211064
+customer_total_spend      0.095877
+avg_reorder_cycle_days    0.083875
+avg_unit_price            0.068816
+std_reorder_cycle_days    0.066522
+sku_popularity_rank       0.063777
+reorder_cv                0.053831
+total_revenue             0.048239
+avg_order_qty             0.046890
+std_order_qty             0.046268
