@@ -250,8 +250,8 @@ function Products_main() {
             return;
         }
 
-        setSelectedItems((prev) => {
-            const next = { ...prev };
+        setSelectedItems(() => {
+            const next: Record<string, SelectedOrderItem> = {};
 
             for (const item of items) {
                 const unitPrice = Number(item.product.price);
