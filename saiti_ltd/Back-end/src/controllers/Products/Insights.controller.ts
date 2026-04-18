@@ -298,6 +298,10 @@ class InsightsController {
                 reorderSuggestions: refreshedInsights.filter((i) => i.insightType === "reorder_recommendation"),
             };
 
+            if (refreshedInsights.length === 0) {
+                return res.status(204).send();
+            }
+
             return Send.success(res, { insights: refreshedInsights, summary });
         } catch (error) {
             console.error("getInsights failed:", error);
